@@ -1,17 +1,20 @@
 import streamlit as st
 import pandas as pd
-import time
-import random
+from webdriver_manager.chrome import ChromeDriverManager
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from webdriver_manager.chrome import ChromeDriverManager
+
+# Set up Chrome options
+options = Options()
+options.headless = True
+service = Service(ChromeDriverManager().install())
+
+# Initialize the Chrome driver
+driver = webdriver.Chrome(service=service, options=options)
 
 # Title of the app
-st.title("RPA Assignment")
+st.title("RPA Assignment - Selenium")
 
 # File uploader
 uploaded_file = st.file_uploader("Choose an Excel file", type=["xlsx", "xls"])
