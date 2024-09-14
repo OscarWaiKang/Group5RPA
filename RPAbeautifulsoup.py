@@ -158,11 +158,11 @@ if 'sorted_requisition' in locals():
         try:
             rating = float(rating)  # Ensure rating is a float
             full_stars = int(rating)
-            if rating % 1 >= 0.75:
+        if rating % 1 >= 0.75:
                 return '★' * (full_stars + 1) + '☆' * (5 - full_stars - 1)
             elif rating % 1 >= 0.25:
                 return '★' * full_stars + '½' + '☆' * (5 - full_stars - 1)
-            else:
+        else:
             return '★' * full_stars + '☆' * (5 - full_stars)
         except ValueError:
             return 'No Rating'  # Handle cases where rating can't be converted
