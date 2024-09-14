@@ -181,7 +181,19 @@ if 'sorted_requisition' in locals():
 
         caption = lowest_price_row['Caption']
         price = f"${lowest_price_row['Price']:.2f}"
-        rating = format_rating(lowest_price_row['Rating'])  # Call the format_rating function
+    
+        # Check the type and value of the rating
+        rating_value = lowest_price_row['Rating']
+        st.write(f"Raw Rating Value: {rating_value} (Type: {type(rating_value)})")  # Debugging line
+    
+        # Ensure the rating is numeric
+        try:
+            rating_value = float(rating_value)  # Convert to float if it's not already
+            rating = format_rating(rating_value)  # Call the format_rating function
+        except (ValueError, TypeError) as e:
+            st.error(f"Invalid rating value: {rating_value}. Error: {e}")
+            rating = "Invalid Rating"
+
         source = lowest_price_row['Source']
 
         st.write("\nLowest Price with Highest Rating:")
