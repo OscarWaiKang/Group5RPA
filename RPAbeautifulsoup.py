@@ -165,7 +165,7 @@ if 'sorted_requisition' in locals():
         total_stars = len(star_rating)  # Total number of stars (e.g., 5)
     
     # Return the numeric value as a float
-    return filled_stars / total_stars * 5  # Scale to 5 if necessary
+        return filled_stars / total_stars * 5  # Scale to 5 if necessary
     
     # Format rating function
     def format_rating(rating):
