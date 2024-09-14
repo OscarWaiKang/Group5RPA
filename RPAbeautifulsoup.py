@@ -183,29 +183,36 @@ if 'sorted_requisition' in locals():
     from reportlab.pdfgen import canvas
 
     def generate_report(file1, file2, output_pdf):
-        df1 = pd.read_excel(file1)
-        df2 = pd.read_excel(file2)
+    df1 = pd.read_excel(file1)
+    df2 = pd.read_excel(file2)
 
-        combined_df = pd.concat([df1, df2], ignore_index=True)
-        combined_df['Price'] = pd.to_numeric(combined_df['Price'].replace({'\$': '', ',': ''}, regex=True), errors='coerce')
+    combined_df = pd.concat([df1, df2], ignore_index=True)
+    combined_df['Price'] = pd.to_numeric(combined_df['Price'].replace({'\$': '', ',': ''}, regex=True), errors='coerce')
 
-        best_product = combined_df.loc[combined_df['Rating'] == '★★★★★'].nsmallest(1, 'Price')
+    # Attempt to find the best product
+    best_product = combined_df[combined_df['Rating'] == '★★★★★']
 
-        if not best_product.empty:
-            source = best_product['Sources'].values[0]
-            product_name = best_product['Caption'].values[0]
-            lowest_price = best_product['Price'].values[0]
-            rating = best_product['Rating'].values[0]
+    if not best_product.empty:
+        best_product = best_product.nsmallest(1, 'Price')
+        
+        source = best_product['Sources'].values[0]
+        product_name = best_product['Caption'].values[0]
+        lowest_price = best_product['Price'].values[0]
+        rating = best_product['Rating'].values[0]
+        
+        # Check if rating is numeric before formatting
+        try:
+            rating_numeric = float(rating)  # Ensure rating is a float
+        except ValueError:
+            rating_numeric = 0.0  # Default to 0.0 if conversion fails
             
-            c = canvas.Canvas(output_pdf, pagesize=letter)
-            c.drawString(100, 750, "Product Report")
-            c.drawString(100, 670, f"Source: {source}")
-            c.drawString(100, 730, f"Product Name: {product_name}")
-            c.drawString(100, 710, f"Lowest Price: ${lowest_price:.2f}")
-            c.drawString(100, 690, f"Rating: {rating:.1f}")  # Display as numeric value
-            c.save()
-            st.write("Report generated successfully.")
-        else:
-            st.write("No products with a 5-star rating found.")
-
-    generate_report('BScomparison_table(alibaba).xlsx', 'BScomparison_table(ebay).xlsx', 'product_report.pdf')
+        c = canvas.Canvas(output_pdf, pagesize=letter)
+        c.drawString(100, 750, "Product Report")
+        c.drawString(100, 670, f"Source: {source}")
+        c.drawString(100, 730, f"Product Name: {product_name}")
+        c.drawString(100, 710, f"Lowest Price: ${lowest_price:.2f}")
+        c.drawString(100, 690, f"Rating: {rating_numeric:.1f}")  # Display as numeric value
+        c.save()
+        st.write("Report generated successfully.")
+    else:
+        st.write("No products with a 5-star rating found.")
