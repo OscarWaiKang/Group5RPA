@@ -1,4 +1,4 @@
-import streamlit as st
+erimport streamlit as st
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
@@ -30,7 +30,7 @@ if uploaded_file is not None:
         st.error(f"Error reading the file: {e}")
 
 if 'sorted_requisition' in locals():
-    product_name = sorted_requisition['Product Name'] 
+    product_name = 'External Hard Drive'
 
     def get_prices_ebay(product_name):
         url = f"https://www.ebay.com/sch/i.html?_nkw={product_name}"
