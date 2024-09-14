@@ -1,5 +1,14 @@
 import streamlit as st
 import pandas as pd
+import time
+import random
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from webdriver_manager.chrome import ChromeDriverManager
 
 # Title of the app
 st.title("RPA Assignment")
@@ -28,14 +37,17 @@ if uploaded_file is not None:
         st.error(f"Error reading the file: {e}")
         print(e)  # Print the error to console for debugging
 
-import time
-import random
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+# Set up Chrome options for headless mode
+options = Options()
+options.headless = True  # Run in headless mode
+options.add_argument("--no-sandbox")  # Bypass OS security model
+options.add_argument("--disable-dev-shm-usage")  # Overcome limited resource problems
 
-driver = webdriver.Chrome()
+# Set up ChromeDriver using webdriver-manager for automatic management
+service = Service(ChromeDriverManager().install())
+
+# Initialize the Chrome driver
+driver = webdriver.Chrome(service=service, options=options)
 
 def get_prices_ebay(product_name):
     driver.get(f"https://www.ebay.com/sch/i.html?_nkw={product_name}")
@@ -61,30 +73,18 @@ def get_prices_ebay(product_name):
                     rating_text = rating_element.text.strip()
                     numeric_rating = float(rating_text.split()[0])  # Get the numeric part
                     ratings.append(numeric_rating)
-                except Exception as e:
-                    # No rating available, append 0.0 or None
+                except Exception:
                     ratings.append(0.0)
 
             except Exception as e:
                 print(f"Error parsing item: {e}")
                 continue
 
-        # Debugging output
-        print(f"eBay Prices: {prices}")
-        print(f"eBay Ratings: {ratings}")
-
-        # Return both lists
         return prices, ratings
 
     except Exception as e:
         print(f"Error retrieving prices from eBay: {e}")
         return [], []
-        
-def print_star_rating(rating):
-    full_stars = int(rating)
-    half_star = 1 if rating % 1 >= 0.5 else 0
-    stars = '★' * full_stars + '½' * half_star + '☆' * (5 - full_stars - half_star)
-    return stars
 
 def get_prices_alibaba(product_name):
     driver.get(f"https://www.alibaba.com/trade/search?fsb=y&IndexArea=product_en&CatId=&SearchText={product_name}")
@@ -98,108 +98,76 @@ def get_prices_alibaba(product_name):
         prices = [price.text.strip() for price in price_elements if price.text.strip()]
         ratings = [float(rating.text.strip().split()[0]) for rating in rating_elements if rating.text.strip()]
 
-        print(f"Alibaba Prices: {prices}")  # Debug statement
-        print(f"Alibaba Ratings: {ratings}")  # Debug statement
-        
-        return prices, ratings
-    except Exception as e:
-        print(f"Error retrieving prices from Alibaba: {str(e)}")
-        return [], []
-
-def get_prices_alibaba(product_name):
-    driver.get(f"https://www.alibaba.com/trade/search?fsb=y&IndexArea=product_en&CatId=&SearchText={product_name}")
-
-    try:
-        price_elements = WebDriverWait(driver, 30).until(
-            EC.presence_of_all_elements_located((By.CSS_SELECTOR, '.search-card-e-price-main')))
-        rating_elements = WebDriverWait(driver, 30).until(
-            EC.presence_of_all_elements_located((By.CSS_SELECTOR, '.search-card-e-review')))
-        
-        prices = [price.text.strip() for price in price_elements if price.text.strip()]
-        ratings = [float(rating.text.strip().split()[0]) for rating in rating_elements if rating.text.strip()]
-
-        print(f"Alibaba Prices: {prices}")  # Debug statement
-        print(f"Alibaba Ratings: {ratings}")  # Debug statement
-        
         return prices, ratings
     except Exception as e:
         print(f"Error retrieving prices from Alibaba: {str(e)}")
         return [], []
 
 # Example product name (replace with your actual DataFrame)
-product_name = sorted_requisition.iloc[0]['Product Name'] 
+if 'sorted_requisition' in locals():
+    product_name = sorted_requisition.iloc[0]['Product Name'] 
 
-# Collect prices and ratings from both vendors
-prices_ebay, ratings_ebay = get_prices_ebay(product_name)
-prices_alibaba, ratings_alibaba = get_prices_alibaba(product_name)
+    # Collect prices and ratings from both vendors
+    prices_ebay, ratings_ebay = get_prices_ebay(product_name)
+    prices_alibaba, ratings_alibaba = get_prices_alibaba(product_name)
 
-# Integrity checks
-if not prices_ebay:
-    print("No prices retrieved from eBay.")
-if not ratings_ebay:
-    print("No ratings retrieved from eBay.")
+    # Combine prices, ratings, and create vendor list if there are prices
+    if prices_ebay or prices_alibaba:
+        prices = prices_ebay + prices_alibaba
+        ratings = ratings_ebay + ratings_alibaba
+        vendors = ['eBay'] * len(prices_ebay) + ['Alibaba'] * len(prices_alibaba)
 
-# Combine prices, ratings, and create vendor list if there are prices
-if prices_ebay or prices_alibaba:
-    prices = prices_ebay + prices_alibaba
-    ratings = ratings_ebay + ratings_alibaba
-    vendors = ['eBay'] * len(prices_ebay) + ['Alibaba'] * len(prices_alibaba)
+        # Ensure all lists are the same length
+        min_length = min(len(prices), len(ratings), len(vendors))
+        prices = prices[:min_length]
+        ratings = ratings[:min_length]
+        vendors = vendors[:min_length]
 
-    print("Number of vendors:", len(vendors))
-    print("Number of prices:", len(prices))
+        comparison_df = pd.DataFrame({'Vendor': vendors, 'Price': prices, 'Rating': ratings})
 
-    # Ensure all lists are the same length
-    min_length = min(len(prices), len(ratings), len(vendors))
-    prices = prices[:min_length]
-    ratings = ratings[:min_length]
-    vendors = vendors[:min_length]
+        # Clean and convert prices to numeric
+        def clean_price(price):
+            if "Tap item to see current price" in price or "See price" in price:
+                return None
+            
+            price = price.replace('US$', '').replace('$', '').replace(',', '').strip()
 
-    comparison_df = pd.DataFrame({'Vendor': vendors, 'Price': prices, 'Rating': ratings})
+            if 'to' in price:
+                price = price.split('to')[0].strip()
+            
+            if '-' in price:
+                price = price.split('-')[0].strip()
 
-    # Clean and convert prices to numeric
-    def clean_price(price):
-        if "Tap item to see current price" in price or "See price" in price:
-            return None
+            try:
+                return float(price)
+            except ValueError:
+                return None  # Return None if conversion fails
+
+        # Apply price cleaning
+        comparison_df['Price'] = comparison_df['Price'].apply(clean_price)
         
-        price = price.replace('US$', '').replace('$', '').replace(',', '').strip()
+        # Drop rows with invalid prices
+        comparison_df = comparison_df.dropna(subset=['Price'])
 
-        if 'to' in price:
-            price = price.split('to')[0].strip()
-        
-        if '-' in price:
-            price = price.split('-')[0].strip()
+        if not comparison_df.empty:
+            # Save the comparison table to an Excel file
+            comparison_df.to_excel('comparison_table.xlsx', index=False)
 
-        try:
-            return float(price)
-        except ValueError:
-            return None  # Return None if conversion fails
+            # Get the highest rating
+            max_rating = comparison_df['Rating'].max()
 
-    # Apply price cleaning
-    comparison_df['Price'] = comparison_df['Price'].apply(clean_price)
-    
-    # Drop rows with invalid prices
-    comparison_df = comparison_df.dropna(subset=['Price'])
+            # Filter the DataFrame to only include rows with the highest rating
+            best_rated_df = comparison_df[comparison_df['Rating'] == max_rating]
 
-    if not comparison_df.empty:
-        # Save the comparison table to an Excel file
-        comparison_df.to_excel('comparison_table.xlsx', index=False)
+            # Find the one with the lowest price
+            best_combined_row = best_rated_df.loc[best_rated_df['Price'].idxmin()]
 
-        # Step 1: Get the highest rating
-        max_rating = comparison_df['Rating'].max()
+            best_combined_price = best_combined_row['Price']
+            best_combined_vendor = best_combined_row['Vendor']
+            best_combined_rating = best_combined_row['Rating']
 
-        # Step 2: Filter the DataFrame to only include rows with the highest rating
-        best_rated_df = comparison_df[comparison_df['Rating'] == max_rating]
-
-        # Step 3: From the highest-rated rows, find the one with the lowest price
-        best_combined_row = best_rated_df.loc[best_rated_df['Price'].idxmin()]
-
-        best_combined_price = best_combined_row['Price']
-        best_combined_vendor = best_combined_row['Vendor']
-        best_combined_rating = best_combined_row['Rating']
-
-        # Generate minutes for the purchase committee based on best combination
-        minutes = f"""
-
+            # Generate minutes for the purchase committee based on best combination
+            minutes = f"""
 [ Product : {product_name} ]
 [ Price Comparison ]
 {comparison_df.to_string(index=False)}
@@ -210,10 +178,10 @@ Price: ${best_combined_price:.2f}
 Rating: {best_combined_rating}
 """
 
-        print(minutes)
+            print(minutes)
+        else:
+            print("No valid price data to display.")
     else:
-        print("No valid price data to display.")
-else:
-    print("No data to save.")
+        print("No data to save.")
 
 driver.quit()
