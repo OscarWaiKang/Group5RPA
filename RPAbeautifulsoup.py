@@ -147,26 +147,32 @@ if 'sorted_requisition' in locals():
             return float('inf')  # Return a large number if conversion fails
 
     combined_df['Price'] = combined_df['Price'].apply(extract_lowest_price)
-    
-    # Filter for 5-star ratings
-    combined_df['5-Star Rating'] = combined_df['Rating'].apply(lambda x: x == 5.0)
-    filtered_df = combined_df[combined_df['5-Star Rating']]
+
+    # Convert ratings to numeric for comparison
+    combined_df['Rating'] = pd.to_numeric(combined_df['Rating'], errors='coerce')
+
+    # Identify the maximum rating
+    max_rating = combined_df['Rating'].max()
+
+    # Filter for products with the maximum rating
+    filtered_df = combined_df[combined_df['Rating'] == max_rating]
 
     if not filtered_df.empty:
+        # Select the product with the lowest price among the highest-rated products
         lowest_price_row = filtered_df.loc[filtered_df['Price'].idxmin()]
-        
+
         caption = lowest_price_row['Caption']
         price = f"${lowest_price_row['Price']:.2f}"
-        rating = "★★★★★"  # Since we're filtering for 5-star ratings
+        rating = f"{max_rating:.1f}"  # Show the maximum rating
         source = lowest_price_row['Sources']
 
-        st.write("\nLowest Price with Highest Rating (5 stars):")
+        st.write("\nLowest Price with Highest Rating:")
         st.write(f"Caption: {caption}")
         st.write(f"Price: {price}")
         st.write(f"Rating: {rating}")
         st.write(f"Source: {source}")
     else:
-        st.write("No products with a 5-star rating found.")
+        st.write("No products found.")
 
     # Report generation (optional)
     from reportlab.lib.pagesizes import letter
