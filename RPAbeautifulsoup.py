@@ -3,20 +3,16 @@ import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 
-Title of the app
+#Title of the app
 st.title("RPA Assignment")
 
-File uploader
+#File uploader
 uploaded_file = st.file_uploader("Choose an Excel file", type=["xlsx", "xls"])
 
 if uploaded_file is not None:
 # Read the Excel file
 try:
 df = pd.read_excel(uploaded_file)
-
-scheme
-
-Copy
     # Check if 'Required Date' column exists
     if 'Required Date' in df.columns:
         # Convert 'Required Date' to datetime
@@ -34,9 +30,6 @@ except Exception as e:
 if 'sorted_requisition' in locals():
 product_name = sorted_requisition.iloc[0]['Product Name']
 
-scheme
-
-Copy
 def get_prices_ebay(product_name):
     url = f"https://www.ebay.com/sch/i.html?_nkw={product_name}"
     response = requests.get(url)
