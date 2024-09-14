@@ -159,6 +159,14 @@ if 'sorted_requisition' in locals():
     # Filter for products with the maximum rating
     highest_rated_products = combined_df[combined_df['Rating'] == max_rating]
 
+    def convert_stars_to_numeric(star_rating: str) -> float:
+    # Count the number of filled stars (assuming filled stars are represented as '★')
+    filled_stars = star_rating.count('★')
+    total_stars = len(star_rating)  # Total number of stars (e.g., 5)
+    
+    # Return the numeric value as a float
+    return filled_stars / total_stars * 5  # Scale to 5 if necessary
+    
     # Format rating function
     def format_rating(rating):
         """Formats the numeric rating into stars representation."""
@@ -176,7 +184,7 @@ if 'sorted_requisition' in locals():
             return '☆☆☆☆☆'
 
     # Display the lowest price product with the highest rating
-    if not highest_rated_products.empty:
+        if not highest_rated_products.empty:
         lowest_price_row = highest_rated_products.loc[highest_rated_products['Price'].idxmin()]
 
         caption = lowest_price_row['Caption']
@@ -186,10 +194,11 @@ if 'sorted_requisition' in locals():
         rating_value = lowest_price_row['Rating']
         st.write(f"Raw Rating Value: {rating_value} (Type: {type(rating_value)})")  # Debugging line
     
-        # Ensure the rating is numeric
+        # Ensure the rating is valid
         try:
-            rating_value = float(rating_value)  # Convert to float if it's not already
-            rating = format_rating(rating_value)  # Call the format_rating function
+            # Convert star rating to numeric
+            rating_numeric = convert_stars_to_numeric(rating_value)  # Convert stars to numeric
+            rating = format_rating(rating_numeric)  # Call the format_rating function
         except (ValueError, TypeError) as e:
             st.error(f"Invalid rating value: {rating_value}. Error: {e}")
             rating = "Invalid Rating"
