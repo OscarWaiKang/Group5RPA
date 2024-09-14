@@ -184,15 +184,15 @@ if 'sorted_requisition' in locals():
             return '☆☆☆☆☆'
 
     # Display the lowest price product with the highest rating
-        if not highest_rated_products.empty:
-            lowest_price_row = highest_rated_products.loc[highest_rated_products['Price'].idxmin()]
+    if not highest_rated_products.empty:
+        lowest_price_row = highest_rated_products.loc[highest_rated_products['Price'].idxmin()]
 
-            caption = lowest_price_row['Caption']
-            price = f"${lowest_price_row['Price']:.2f}"
+        caption = lowest_price_row['Caption']
+        price = f"${lowest_price_row['Price']:.2f}"
     
-            # Check the type and value of the rating
-            rating_value = lowest_price_row['Rating']
-            st.write(f"Raw Rating Value: {rating_value} (Type: {type(rating_value)})")  # Debugging line
+        # Check the type and value of the rating
+        rating_value = lowest_price_row['Rating']
+        st.write(f"Raw Rating Value: {rating_value} (Type: {type(rating_value)})")  # Debugging line
     
         # Ensure the rating is valid
         try:
@@ -210,7 +210,7 @@ if 'sorted_requisition' in locals():
         st.write(f"Price: {price}")
         st.write(f"Rating: {rating}")  # Display formatted rating
         st.write(f"Source: {source}")
-        else:
+    else:
         st.write("No products with a valid rating found.")
 
     # Report generation (optional)
