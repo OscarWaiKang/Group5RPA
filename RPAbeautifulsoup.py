@@ -2,8 +2,6 @@ import streamlit as st
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
 
 # Title of the app
 st.title("RPA Assignment")
@@ -16,136 +14,198 @@ if uploaded_file is not None:
     try:
         df = pd.read_excel(uploaded_file)
 
-        # Check for 'Required Date' column
+        # Check if 'Required Date' column exists
         if 'Required Date' in df.columns:
-            # Convert and sort the DataFrame
+            # Convert 'Required Date' to datetime
             df['Required Date'] = pd.to_datetime(df['Required Date'])
+
+            # Sort the DataFrame by 'Required Date'
             sorted_requisition = df.sort_values(by='Required Date')
             st.write("Sorted Requisition Data by Date:")
             st.dataframe(sorted_requisition)
-
-            product_name = sorted_requisition.iloc[0]['Product Name']
-
-            prices_ebay, ratings_ebay, captions_ebay = get_prices_ebay(product_name)
-            prices_alibaba, ratings_alibaba, captions_alibaba = get_prices_alibaba(product_name)
-
-            # Create and save DataFrames
-            ebay_df = create_dataframe(prices_ebay, ratings_ebay, captions_ebay, "eBay")
-            alibaba_df = create_dataframe(prices_alibaba, ratings_alibaba, captions_alibaba, "Alibaba")
-
-            # Combine DataFrames and process prices
-            combined_df = combine_dataframes(alibaba_df, ebay_df)
-            display_best_product(combined_df)
-
-            # Generate report
-            generate_report('BScomparison_table(alibaba).xlsx', 'BScomparison_table(ebay).xlsx', 'product_report.pdf')
-
         else:
             st.error("The 'Required Date' column is not found in the uploaded file.")
 
     except Exception as e:
         st.error(f"Error reading the file: {e}")
 
-def get_prices_ebay(product_name):
-    url = f"https://www.ebay.com/sch/i.html?_nkw={product_name.replace(' ', '+')}"
-    response = requests.get(url)
-    soup = BeautifulSoup(response.text, 'html.parser')
-    return extract_prices(soup, 's-item', '.s-item__price', '.s-item__title', '.s-item__reviews span.clipped')
+if 'sorted_requisition' in locals():
+    product_name = sorted_requisition.iloc[0]['Product Name'] 
 
-def get_prices_alibaba(product_name):
-    url = f"https://www.alibaba.com/trade/search?SearchText={product_name.replace(' ', '+')}"
-    response = requests.get(url)
-    soup = BeautifulSoup(response.text, 'html.parser')
-    return extract_prices(soup, '.search-card', '.search-card-e-price-main', '.search-e-card-title', '.x-star-rating')
+    def get_prices_ebay(product_name):
+        url = f"https://www.ebay.com/sch/i.html?_nkw={product_name}"
+        response = requests.get(url)
+        soup = BeautifulSoup(response.text, 'html.parser')
 
-def extract_prices(soup, item_selector, price_selector, title_selector, rating_selector):
-    prices, ratings, captions, sources = [], [], [], []
-    items = soup.select(item_selector)
-    for item in items:
-        prices.append(get_text(item, price_selector, "N/A"))
-        ratings.append(get_numeric_rating(item, rating_selector))
-        captions.append(get_text(item, title_selector, "No caption available"))
-        sources.append("Source")
-    return prices, ratings, captions, sources
+        prices, ratings, captions, sources = [], [], [], []
+        items = soup.select('.s-item')
+        for item in items:
+            price = item.select_one('.s-item__price')
+            if price:
+                prices.append(price.text.strip())
+            else:
+                prices.append("N/A")
 
-def get_text(item, selector, default):
-    element = item.select_one(selector)
-    return element.text.strip() if element else default
+            rating_element = item.select_one('.s-item__reviews span.clipped')
+            if rating_element:
+                rating_text = rating_element.text.strip()
+                try:
+                    numeric_rating = float(rating_text.split()[0])
+                    ratings.append(numeric_rating)
+                except (ValueError, IndexError):
+                    ratings.append(0.0)  # Default to 0.0 if parsing fails
+            else:
+                ratings.append(0.0)
 
-def get_numeric_rating(item, selector):
-    rating_element = item.select_one(selector)
-    if rating_element:
-        rating_text = rating_element.text.strip()
-        try:
-            return float(rating_text.split()[0])
-        except (ValueError, IndexError):
-            return 0.0
-    return 0.0
+            caption_element = item.select_one('.s-item__title')
+            if caption_element:
+                captions.append(caption_element.text.strip())
+            else:
+                captions.append("No caption available")
+                
+            sources.append("eBay")
+        return prices, ratings, captions, sources
 
-def create_dataframe(prices, ratings, captions, source_name):
+    prices_ebay, ratings_ebay, captions_ebay, sources_ebay = get_prices_ebay(product_name)
+
     data = {
-        'Sources': [source_name] * len(prices),
-        'Caption': captions,
-        'Price': prices,
-        'Rating': [rating_to_stars(r) for r in ratings]
+        'Sources': sources_ebay,
+        'Caption': captions_ebay,
+        'Price': prices_ebay,
+        'Rating': ratings_ebay  # Store numeric ratings here
     }
-    df = pd.DataFrame(data)
-    df.to_excel(f'BScomparison_table({source_name.lower()}).xlsx', index=False)
-    return df
 
-def combine_dataframes(alibaba_df, ebay_df):
+    # Create DataFrame
+    results_df = pd.DataFrame(data)
+
+    # Alibaba price retrieval
+    def get_prices_alibaba(product_name):
+        url = f"https://www.alibaba.com/trade/search?SearchText={product_name}"
+        response = requests.get(url)
+        soup = BeautifulSoup(response.text, 'html.parser')
+
+        prices, ratings, captions, sources = [], [], [], []
+        items = soup.select('.search-card')
+        for item in items:
+            price = item.select_one('.search-card-e-price-main')
+            if price:
+                prices.append(price.text.strip())
+            else:
+                prices.append("N/A")
+
+            rating_element = item.select_one('.x-star-rating')
+            if rating_element:
+                rating_text = rating_element.text.strip()
+                try:
+                    numeric_rating = float(rating_text.split()[0])
+                    ratings.append(numeric_rating)
+                except (ValueError, IndexError):
+                    ratings.append(0.0)  # Default to 0.0 if parsing fails
+            else:
+                ratings.append(0.0)
+
+            caption_element = item.select_one('.search-e-card-title')
+            if caption_element:
+                captions.append(caption_element.text.strip())
+            else:
+                captions.append("No caption available")
+
+            sources.append("Alibaba")
+        
+        return prices, ratings, captions, sources
+
+    prices_alibaba, ratings_alibaba, captions_alibaba, sources_alibaba = get_prices_alibaba(product_name)
+
+    data = {
+        'Sources': sources_alibaba,
+        'Caption': captions_alibaba,
+        'Price': prices_alibaba,
+        'Rating': ratings_alibaba  # Store numeric ratings here
+    }
+
+    # Create DataFrame
+    results_df = pd.DataFrame(data)
+
+    # Combine DataFrames
+    alibaba_df = results_df
+    ebay_df = pd.DataFrame(data)
+
     alibaba_df['Source'] = 'Alibaba'
     ebay_df['Source'] = 'eBay'
+
     combined_df = pd.concat([alibaba_df, ebay_df], ignore_index=True)
+
+    # Clean Price column and handle NaN values
     combined_df['Price'] = combined_df['Price'].fillna('0')
+
+    def extract_lowest_price(price_str):
+        try:
+            price_str = price_str.replace('$', '').replace(',', '')
+            prices = price_str.split(' to ')
+            return float(prices[0])
+        except (ValueError, IndexError):
+            return float('inf')  # Return a large number if conversion fails
+
     combined_df['Price'] = combined_df['Price'].apply(extract_lowest_price)
-    return combined_df
 
-def extract_lowest_price(price_str):
-    try:
-        price_str = price_str.replace('$', '').replace(',', '')
-        prices = price_str.split(' to ')
-        return float(prices[0])
-    except (ValueError, IndexError):
-        return float('inf')
+    # Convert ratings to numeric for comparison
+    combined_df['Rating'] = pd.to_numeric(combined_df['Rating'], errors='coerce')
 
-def display_best_product(combined_df):
+    # Identify the maximum rating
     max_rating = combined_df['Rating'].max()
-    highest_rated_products = combined_df[combined_df['Rating'] == max_rating]
 
-    if not highest_rated_products.empty:
-        lowest_price_row = highest_rated_products.loc[highest_rated_products['Price'].idxmin()]
-        st.write("\nLowest Price with Highest Rating:")
-        st.write(f"Caption: {lowest_price_row['Caption']}")
-        st.write(f"Price: ${lowest_price_row['Price']:.2f}")
-        st.write(f"Rating: {lowest_price_row['Rating']}")
-        st.write(f"Source: {lowest_price_row['Source']}")
+    # Filter for products with the maximum rating
+    filtered_df = combined_df[combined_df['Rating'] == max_rating]
+
+    # Check if filtered_df is empty
+    if filtered_df.empty:
+        st.write("No products found with the maximum rating.")
     else:
-        st.write("No products with a valid rating found.")
+        # Ensure Price is numeric
+        filtered_df['Price'] = pd.to_numeric(filtered_df['Price'], errors='coerce')
+        
+        # Select the product with the lowest price among the highest-rated products
+        lowest_price_row = filtered_df.loc[filtered_df['Price'].idxmin()]
 
-def generate_report(file1, file2, output_pdf):
-    df1 = pd.read_excel(file1)
-    df2 = pd.read_excel(file2)
-    combined_df = pd.concat([df1, df2], ignore_index=True)
-    combined_df['Price'] = pd.to_numeric(combined_df['Price'].replace({'\$': '', ',': ''}, regex=True), errors='coerce')
-    best_product = combined_df.loc[combined_df['Rating'] == combined_df['Rating'].max()].nsmallest(1, 'Price')
+        caption = lowest_price_row['Caption']
+        price = f"${lowest_price_row['Price']:.2f}"
+        rating = f"{lowest_price_row['Rating']:.1f}"  # Display as numeric value
+        source = lowest_price_row['Sources']
 
-    if not best_product.empty:
-        create_pdf_report(best_product, output_pdf)
-        st.write("Report generated successfully.")
-    else:
-        st.write("No products with a valid rating found.")
+        st.write("### Lowest Price with Highest Rating:")
+        st.write(f"**Caption:** {caption}")
+        st.write(f"**Price:** {price}")
+        st.write(f"**Rating:** {rating}")
+        st.write(f"**Source:** {source}")
 
-def create_pdf_report(best_product, output_pdf):
-    source = best_product['Sources'].values[0]
-    product_name = best_product['Caption'].values[0]
-    lowest_price = best_product['Price'].values[0]
-    rating = best_product['Rating'].values[0]
+    # Report generation (optional)
+    from reportlab.lib.pagesizes import letter
+    from reportlab.pdfgen import canvas
 
-    c = canvas.Canvas(output_pdf, pagesize=letter)
-    c.drawString(100, 750, "Product Report")
-    c.drawString(100, 670, f"Source: {source}")
-    c.drawString(100, 730, f"Product Name: {product_name}")
-    c.drawString(100, 710, f"Lowest Price: ${lowest_price:.2f}")
-    c.drawString(100, 690, f"Rating: {rating}")
-    c.save()
+    def generate_report(file1, file2, output_pdf):
+        df1 = pd.read_excel(file1)
+        df2 = pd.read_excel(file2)
+
+        combined_df = pd.concat([df1, df2], ignore_index=True)
+        combined_df['Price'] = pd.to_numeric(combined_df['Price'].replace({'\$': '', ',': ''}, regex=True), errors='coerce')
+
+        best_product = combined_df.loc[combined_df['Rating'] == '★★★★★'].nsmallest(1, 'Price')
+
+        if not best_product.empty:
+            source = best_product['Sources'].values[0]
+            product_name = best_product['Caption'].values[0]
+            lowest_price = best_product['Price'].values[0]
+            rating = best_product['Rating'].values[0]
+            
+            c = canvas.Canvas(output_pdf, pagesize=letter)
+            c.drawString(100, 750, "Product Report")
+            c.drawString(100, 670, f"Source: {source}")
+            c.drawString(100, 730, f"Product Name: {product_name}")
+            c.drawString(100, 710, f"Lowest Price: ${lowest_price:.2f}")
+            c.drawString(100, 690, f"Rating: {rating:.1f}")  # Display as numeric value
+            c.save()
+            st.write("Report generated successfully.")
+        else:
+            st.write("No products with a 5-star rating found.")
+
+    generate_report('BScomparison_table(alibaba).xlsx', 'BScomparison_table(ebay).xlsx', 'product_report.pdf')
