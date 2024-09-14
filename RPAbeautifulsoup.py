@@ -166,11 +166,11 @@ if 'sorted_requisition' in locals():
         rating = '★★★★★' if lowest_price_row['Rating'] == 5 else f"{lowest_price_row['Rating']:.1f}"  # Display as stars if 5
         source = lowest_price_row['Sources']
 
-        st.write("Lowest Price with Highest Rating:")
-        st.write(f"Caption: {caption}")
-        st.write(f"Price: {price}")
-        st.write(f"Rating: {rating}")
-        st.write(f"Source: {source}")
+        st.write("### Lowest Price with Highest Rating (5 stars):")
+        st.write(f"**Caption:** {caption}")
+        st.write(f"**Price:** {price}")
+        st.write(f"**Rating:** {rating}")
+        st.write(f"**Source:** {source}")
     else:
         st.write("No products found.")
 
