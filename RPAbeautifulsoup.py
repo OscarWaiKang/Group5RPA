@@ -157,19 +157,26 @@ if 'sorted_requisition' in locals():
     # Filter for products with the maximum rating
     filtered_df = combined_df[combined_df['Rating'] == max_rating]
 
-    # Select the product with the lowest price among the highest-rated products
-    lowest_price_row = filtered_df.loc[filtered_df['Price'].idxmin()]
+    # Check if filtered_df is empty
+    if filtered_df.empty:
+        st.write("No products found with the maximum rating.")
+    else:
+        # Ensure Price is numeric
+        filtered_df['Price'] = pd.to_numeric(filtered_df['Price'], errors='coerce')
+        
+        # Select the product with the lowest price among the highest-rated products
+        lowest_price_row = filtered_df.loc[filtered_df['Price'].idxmin()]
 
-    caption = lowest_price_row['Caption']
-    price = f"${lowest_price_row['Price']:.2f}"
-    rating = f"{lowest_price_row['Rating']:.1f}"  # Display as numeric value
-    source = lowest_price_row['Sources']
+        caption = lowest_price_row['Caption']
+        price = f"${lowest_price_row['Price']:.2f}"
+        rating = f"{lowest_price_row['Rating']:.1f}"  # Display as numeric value
+        source = lowest_price_row['Sources']
 
-    st.write("### Lowest Price with Highest Rating:")
-    st.write(f"**Caption:** {caption}")
-    st.write(f"**Price:** {price}")
-    st.write(f"**Rating:** {rating}")
-    st.write(f"**Source:** {source}")
+        st.write("### Lowest Price with Highest Rating:")
+        st.write(f"**Caption:** {caption}")
+        st.write(f"**Price:** {price}")
+        st.write(f"**Rating:** {rating}")
+        st.write(f"**Source:** {source}")
 
     # Report generation (optional)
     from reportlab.lib.pagesizes import letter
