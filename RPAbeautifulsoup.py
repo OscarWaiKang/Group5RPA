@@ -210,7 +210,7 @@ if 'sorted_requisition' in locals():
         st.write(f"Price: {price}")
         st.write(f"Rating: {rating}")  # Display formatted rating
         st.write(f"Source: {source}")
-    else:
+        else:
         st.write("No products with a valid rating found.")
 
     # Report generation (optional)
