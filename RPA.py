@@ -44,22 +44,10 @@
   },
   {
    "cell_type": "code",
-   "execution_count": 23,
+   "execution_count": 27,
    "id": "097fe707-853f-4aa9-8a8c-da914601a5e4",
    "metadata": {},
-   "outputs": [
-    {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
-      "2024-09-14 17:56:20.896 \n",
-      "  \u001b[33m\u001b[1mWarning:\u001b[0m to view this Streamlit app on a browser, run it with the following\n",
-      "  command:\n",
-      "\n",
-      "    streamlit run C:\\Users\\user\\anaconda3\\Lib\\site-packages\\ipykernel_launcher.py [ARGUMENTS]\n"
-     ]
-    }
-   ],
+   "outputs": [],
    "source": [
     "import streamlit as st\n",
     "import pandas as pd\n",
@@ -74,6 +62,8 @@
     "    # Read the Excel file\n",
     "    try:\n",
     "        df = pd.read_excel(uploaded_file)\n",
+    "        st.write(\"DataFrame Loaded Successfully:\")\n",
+    "        st.write(df.head())  # Display the first few rows of the DataFrame\n",
     "\n",
     "        # Check if 'Required Date' column exists\n",
     "        if 'Required Date' in df.columns:\n",
@@ -88,7 +78,8 @@
     "            st.error(\"The 'Required Date' column is not found in the uploaded file.\")\n",
     "\n",
     "    except Exception as e:\n",
-    "        st.error(f\"Error reading the file: {e}\")"
+    "        st.error(f\"Error reading the file: {e}\")\n",
+    "        print(e)  # Print the error to console for debugging"
    ]
   },
   {
