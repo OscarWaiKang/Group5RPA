@@ -6,13 +6,20 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 # Set up Chrome options
 options = Options()
-options.headless = True  # You can set this to False for debugging
-options.add_argument("--no-sandbox")  # Add this line
-options.add_argument("--disable-dev-shm-usage")  # Add this line
+options.headless = True  # Set to True for headless mode; False for debugging
+options.add_argument("--no-sandbox")
+options.add_argument("--disable-dev-shm-usage")
 
 # Initialize the Chrome driver
 service = Service(ChromeDriverManager().install())
 driver = webdriver.Chrome(service=service, options=options)
+
+# Example usage
+driver.get("https://example.com")
+st.write(driver.title)
+
+# Clean up
+driver.quit()
 
 # Title of the app
 st.title("RPA Assignment - Selenium")
