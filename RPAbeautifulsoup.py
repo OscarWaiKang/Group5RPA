@@ -153,25 +153,41 @@ if 'sorted_requisition' in locals():
 
     combined_df['Price'] = combined_df['Price'].apply(extract_lowest_price)
 
-    # **Modified Section**: Find product with highest rating
+    # Find product with highest rating
     max_rating = combined_df['Rating'].max()
 
     # Filter for products with the maximum rating
     highest_rated_products = combined_df[combined_df['Rating'] == max_rating]
 
-    # In the section where you display the lowest price product
+    # Format rating function
+    def format_rating(rating):
+        """Formats the numeric rating into stars representation."""
+        if rating >= 5:
+            return '★★★★★'
+        elif rating >= 4:
+            return '★★★★☆'
+        elif rating >= 3:
+            return '★★★☆☆'
+        elif rating >= 2:
+            return '★★☆☆☆'
+        elif rating >= 1:
+            return '★☆☆☆☆'
+        else:
+            return '☆☆☆☆☆'
+
+    # Display the lowest price product with the highest rating
     if not highest_rated_products.empty:
         lowest_price_row = highest_rated_products.loc[highest_rated_products['Price'].idxmin()]
-    
+
         caption = lowest_price_row['Caption']
         price = f"${lowest_price_row['Price']:.2f}"
-        rating = format_rating(lowest_price_row['Rating'])  # Get numeric value
+        rating = format_rating(lowest_price_row['Rating'])  # Call the format_rating function
         source = lowest_price_row['Source']
 
         st.write("\nLowest Price with Highest Rating:")
         st.write(f"Caption: {caption}")
         st.write(f"Price: {price}")
-        st.write(f"Rating: {rating}")  # Display numeric rating
+        st.write(f"Rating: {rating}")  # Display formatted rating
         st.write(f"Source: {source}")
     else:
         st.write("No products with a valid rating found.")
