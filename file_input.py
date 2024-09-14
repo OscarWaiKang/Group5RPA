@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 
 # Title of the app
-st.title("RPA Assignment - Sort Requisition by Date")
+st.title("RPA Assignment")
 
 # File uploader
 uploaded_file = st.file_uploader("Choose an Excel file", type=["xlsx", "xls"])
@@ -11,8 +11,6 @@ if uploaded_file is not None:
     # Read the Excel file
     try:
         df = pd.read_excel(uploaded_file)
-        st.write("Data from the uploaded requisition form:")
-        st.dataframe(df)
 
         # Check if 'Required Date' column exists
         if 'Required Date' in df.columns:
