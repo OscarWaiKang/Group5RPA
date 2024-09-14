@@ -162,10 +162,10 @@ if 'sorted_requisition' in locals():
 
     caption = lowest_price_row['Caption']
     price = f"${lowest_price_row['Price']:.2f}"
-    rating = '★★★★★' if lowest_price_row['Rating'] == 5 else f"{lowest_price_row['Rating']:.1f}"  # Display as stars if 5
+    rating = f"{lowest_price_row['Rating']:.1f}"  # Display as numeric value
     source = lowest_price_row['Sources']
 
-    st.write("### Lowest Price with Highest Rating (5 stars):")
+    st.write("### Lowest Price with Highest Rating:")
     st.write(f"**Caption:** {caption}")
     st.write(f"**Price:** {price}")
     st.write(f"**Rating:** {rating}")
@@ -195,7 +195,7 @@ if 'sorted_requisition' in locals():
             c.drawString(100, 670, f"Source: {source}")
             c.drawString(100, 730, f"Product Name: {product_name}")
             c.drawString(100, 710, f"Lowest Price: ${lowest_price:.2f}")
-            c.drawString(100, 690, f"Rating: {rating}")
+            c.drawString(100, 690, f"Rating: {rating:.1f}")  # Display as numeric value
             c.save()
             st.write("Report generated successfully.")
         else:
