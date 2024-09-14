@@ -152,30 +152,29 @@ if 'sorted_requisition' in locals():
             return float('inf')  # Return a large number if conversion fails
 
     combined_df['Price'] = combined_df['Price'].apply(extract_lowest_price)
-    filtered_df = combined_df[combined_df['Rating'] == '★★★★★']
 
-    def format_rating(rating):
-        try:
-            return float(rating)  # Return the rating as a float
-        except ValueError:
-            return "No Rating"  # Handle cases where rating can't be converted
+    # **Modified Section**: Find product with highest rating
+    max_rating = combined_df['Rating'].max()
+
+    # Filter for products with the maximum rating
+    highest_rated_products = combined_df[combined_df['Rating'] == max_rating]
 
     # In the section where you display the lowest price product
-    if not filtered_df.empty:
-        lowest_price_row = filtered_df.loc[filtered_df['Price'].idxmin()]
+    if not highest_rated_products.empty:
+        lowest_price_row = highest_rated_products.loc[highest_rated_products['Price'].idxmin()]
     
         caption = lowest_price_row['Caption']
         price = f"${lowest_price_row['Price']:.2f}"
         rating = format_rating(lowest_price_row['Rating'])  # Get numeric value
         source = lowest_price_row['Source']
 
-        st.write("\nLowest Price with Highest Rating (5 stars):")
+        st.write("\nLowest Price with Highest Rating:")
         st.write(f"Caption: {caption}")
         st.write(f"Price: {price}")
         st.write(f"Rating: {rating}")  # Display numeric rating
         st.write(f"Source: {source}")
     else:
-        st.write("No products with a 5-star rating found.")
+        st.write("No products with a valid rating found.")
 
     # Report generation (optional)
     from reportlab.lib.pagesizes import letter
@@ -188,7 +187,7 @@ if 'sorted_requisition' in locals():
         combined_df = pd.concat([df1, df2], ignore_index=True)
         combined_df['Price'] = pd.to_numeric(combined_df['Price'].replace({'\$': '', ',': ''}, regex=True), errors='coerce')
 
-        best_product = combined_df.loc[combined_df['Rating'] == '★★★★★'].nsmallest(1, 'Price')
+        best_product = combined_df.loc[combined_df['Rating'] == combined_df['Rating'].max()].nsmallest(1, 'Price')
 
         if not best_product.empty:
             source = best_product['Sources'].values[0]
@@ -205,6 +204,6 @@ if 'sorted_requisition' in locals():
             c.save()
             st.write("Report generated successfully.")
         else:
-            st.write("No products with a 5-star rating found.")
+            st.write("No products with a valid rating found.")
 
     generate_report('BScomparison_table(alibaba).xlsx', 'BScomparison_table(ebay).xlsx', 'product_report.pdf')
