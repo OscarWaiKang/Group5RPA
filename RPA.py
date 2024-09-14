@@ -11,8 +11,6 @@ if uploaded_file is not None:
     # Read the Excel file
     try:
         df = pd.read_excel(uploaded_file)
-        st.write("DataFrame Loaded Successfully:")
-        st.write(df.head())  # Display the first few rows of the DataFrame
 
         # Check if 'Required Date' column exists
         if 'Required Date' in df.columns:
