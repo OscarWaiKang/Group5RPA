@@ -63,7 +63,9 @@ if 'sorted_requisition' in locals():
             sources.append("eBay")
         return prices, ratings, captions, sources
 
-    def rating_to_stars(rating):
+    def format_rating(rating):
+    try:
+        rating = float(rating)  # Ensure rating is a float
         full_stars = int(rating)
         if rating % 1 >= 0.75:
             return '★' * (full_stars + 1) + '☆' * (5 - full_stars - 1)
@@ -71,7 +73,9 @@ if 'sorted_requisition' in locals():
             return '★' * full_stars + '½' + '☆' * (5 - full_stars - 1)
         else:
             return '★' * full_stars + '☆' * (5 - full_stars)
-
+    except ValueError:
+        return 'No Rating'  # Handle cases where rating can't be converted
+        
     prices_ebay, ratings_ebay, captions_ebay, sources_ebay = get_prices_ebay(product_name)
 
     data = {
@@ -155,22 +159,20 @@ if 'sorted_requisition' in locals():
     filtered_df = combined_df[combined_df['Rating'] == '★★★★★']
 
     if not filtered_df.empty:
-        lowest_price_row = filtered_df.loc[filtered_df['Price'].idxmin()]
-        def format_rating(rating):
-            return '★' * int(rating) + '☆' * (5 - int(rating))
+    lowest_price_row = filtered_df.loc[filtered_df['Price'].idxmin()]
+    
+    caption = lowest_price_row['Caption']
+    price = f"${lowest_price_row['Price']:.2f}"
+    rating = format_rating(lowest_price_row['Rating'])  # This is where the updated function is called
+    source = lowest_price_row['Source']
 
-        caption = lowest_price_row['Caption']
-        price = f"${lowest_price_row['Price']:.2f}"
-        rating = format_rating(lowest_price_row['Rating'])
-        source = lowest_price_row['Source']
-
-        st.write("\nLowest Price with Highest Rating (5 stars):")
-        st.write(f"Caption: {caption}")
-        st.write(f"Price: {price}")
-        st.write(f"Rating: {rating}")
-        st.write(f"Source: {source}")
-    else:
-        st.write("No products with a 5-star rating found.")
+    st.write("\nLowest Price with Highest Rating (5 stars):")
+    st.write(f"Caption: {caption}")
+    st.write(f"Price: {price}")
+    st.write(f"Rating: {rating}")
+    st.write(f"Source: {source}")
+else:
+    st.write("No products with a 5-star rating found.")
 
     # Report generation (optional)
     from reportlab.lib.pagesizes import letter
