@@ -30,7 +30,7 @@ if uploaded_file is not None:
         st.error(f"Error reading the file: {e}")
 
 if 'sorted_requisition' in locals():
-    product_name = 'External Hard Drive'
+    product_name = sorted_requisition.iloc[0]['Product Name'] 
 
     def get_prices_ebay(product_name):
         url = f"https://www.ebay.com/sch/i.html?_nkw={product_name}"
