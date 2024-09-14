@@ -156,29 +156,23 @@ if 'sorted_requisition' in locals():
 
     def format_rating(rating):
         try:
-            rating = float(rating)  # Ensure rating is a float
-            full_stars = int(rating)
-            if rating % 1 >= 0.75:
-                return '★' * (full_stars + 1) + '☆' * (5 - full_stars - 1)
-            elif rating % 1 >= 0.25:
-                return '★' * full_stars + '½' + '☆' * (5 - full_stars - 1)
-            else:
-                return '★' * full_stars + '☆' * (5 - full_stars)
+            return float(rating)  # Return the rating as a float
         except ValueError:
-            return 'No Rating'  # Handle cases where rating can't be converted
+            return "No Rating"  # Handle cases where rating can't be converted
 
+    # In the section where you display the lowest price product
     if not filtered_df.empty:
         lowest_price_row = filtered_df.loc[filtered_df['Price'].idxmin()]
-        
+    
         caption = lowest_price_row['Caption']
         price = f"${lowest_price_row['Price']:.2f}"
-        rating = format_rating(lowest_price_row['Rating'])
+        rating = format_rating(lowest_price_row['Rating'])  # Get numeric value
         source = lowest_price_row['Source']
 
         st.write("\nLowest Price with Highest Rating (5 stars):")
         st.write(f"Caption: {caption}")
         st.write(f"Price: {price}")
-        st.write(f"Rating: {rating}")
+        st.write(f"Rating: {rating}")  # Display numeric rating
         st.write(f"Source: {source}")
     else:
         st.write("No products with a 5-star rating found.")
