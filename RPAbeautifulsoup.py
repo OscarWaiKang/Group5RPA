@@ -192,7 +192,6 @@ if 'sorted_requisition' in locals():
     
         # Check the type and value of the rating
         rating_value = lowest_price_row['Rating']
-        st.write(f"Raw Rating Value: {rating_value} (Type: {type(rating_value)})")  # Debugging line
     
         # Ensure the rating is valid
         try:
