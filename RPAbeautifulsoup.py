@@ -160,9 +160,9 @@ if 'sorted_requisition' in locals():
     highest_rated_products = combined_df[combined_df['Rating'] == max_rating]
 
     def convert_stars_to_numeric(star_rating: str) -> float:
-    # Count the number of filled stars (assuming filled stars are represented as '★')
-    filled_stars = star_rating.count('★')
-    total_stars = len(star_rating)  # Total number of stars (e.g., 5)
+        # Count the number of filled stars (assuming filled stars are represented as '★')
+        filled_stars = star_rating.count('★')
+        total_stars = len(star_rating)  # Total number of stars (e.g., 5)
     
     # Return the numeric value as a float
     return filled_stars / total_stars * 5  # Scale to 5 if necessary
