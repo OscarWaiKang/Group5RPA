@@ -1,16 +1,17 @@
 import streamlit as st
-import pandas as pd
-from webdriver_manager.chrome import ChromeDriverManager
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
+from webdriver_manager.chrome import ChromeDriverManager
 
 # Set up Chrome options
 options = Options()
-options.headless = True
-service = Service(ChromeDriverManager().install())
+options.headless = True  # You can set this to False for debugging
+options.add_argument("--no-sandbox")  # Add this line
+options.add_argument("--disable-dev-shm-usage")  # Add this line
 
 # Initialize the Chrome driver
+service = Service(ChromeDriverManager().install())
 driver = webdriver.Chrome(service=service, options=options)
 
 # Title of the app
