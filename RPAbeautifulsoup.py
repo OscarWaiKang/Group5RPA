@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import requests
+import os
 from bs4 import BeautifulSoup
 
 # Title of the app
@@ -213,8 +214,12 @@ if 'sorted_requisition' in locals():
         else:
             st.write("No products with a 5-star rating found.")
 
-    generate_report(
-        'BScomparison_table(alibaba).xlsx', 
-        'BScomparison_table(ebay).xlsx', 
-        r'C:\Users\user\Downloads\Group5\Ai Assignment (1)\product_report.pdf'
-    )
+    try:
+        generate_report(
+            'BScomparison_table(alibaba).xlsx', 
+            'BScomparison_table(ebay).xlsx', 
+            r'C:\Users\user\Downloads\Group5\Ai Assignment (1)\product_report.pdf'
+        )
+        st.write("Report generated successfully.")
+    except Exception as e:
+        st.error(f"Error generating report: {e}")
