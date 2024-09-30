@@ -214,7 +214,7 @@ if 'sorted_requisition' in locals():
             st.write("No products with a 5-star rating found.")
 
     generate_report(
-    'BScomparison_table(alibaba).xlsx', 
-    'BScomparison_table(ebay).xlsx', 
-    r'C:\Users\user\Downloads\Group5\Ai Assignment (1)\product_report.pdf'
-)
+        'BScomparison_table(alibaba).xlsx', 
+        'BScomparison_table(ebay).xlsx', 
+        r'C:\Users\user\Downloads\Group5\Ai Assignment (1)\product_report.pdf'
+    )
