@@ -218,5 +218,5 @@ if 'sorted_requisition' in locals():
     generate_report(
         'BScomparison_table(alibaba).xlsx', 
         'BScomparison_table(ebay).xlsx', 
-        r'C:\Users\user\Downloads\Group5\Ai Assignment (1)\product_report.pdf'
+        r'C:/Users/user/Downloads/Group5/Ai Assignment (1)/product_report.pdf'
     )
